@@ -1,11 +1,14 @@
 #!/bin/bash
 
 sudo pacman -S --noconfirm \
+	fcitx5-mozc \
+	fcitx5-configtool \
 	gnome-shell \
 	gdm \
 	gnome-backgrounds \
     gnome-browser-connector \
 	gnome-control-center \
+	gnome-firmware \
 	gnome-keyring \
     gnome-system-monitor \
     loupe \

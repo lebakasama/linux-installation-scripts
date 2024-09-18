@@ -31,9 +31,11 @@ pacman -S --noconfirm \
 	efibootmgr \
 	cryptsetup \
     dosfstools \
+	fwupd \
 	git \
 	grub-btrfs \
 	grub \
+	libsmbios \
 	man \
 	networkmanager \
     tlp \
@@ -51,6 +53,11 @@ grub-mkconfig -o /boot/grub/grub.cfg
 # Configure grub
 UUID="$(blkid -o value /dev/$ENCRYPTED_DEVICE | head -n 1)"
 sed -i "6s/\\\"$/ cryptdevice\=UUID\=$UUID:$ENCRYPTED_MAPPER_DEVICE root\=\/dev\/mapper\/$ENCRYPTED_MAPPER_DEVICE\"/" /etc/default/grub
+
+# Set kernel parameters to enable suspend
+sed -i '6s/"$/ acpi_rev_override=1 acpi_osi=Linux mem_sleep_default=deep"/' /etc/default/grub
+
+# Regenerate grub settings
 grub-mkconfig -o /boot/grub/grub.cfg
 
 # mkinitcpio config and regeneration
@@ -61,6 +68,11 @@ mkinitcpio -p linux
 # Start TLP (power saving)
 systemctl enable tlp
 systemctl start tlp
+
+# Set thermal mode. smbios-thermal-ctl works only as root or sudo.
+# Get current mode: smbios-thermal-ctl -g  
+# Get available modes: smbios-thermal-ctl -i
+smbios-thermal-ctl --set-thermal-mode=Balanced
 
 echo
 echo "GRUB should be installed. Reboot and hope for the best"
