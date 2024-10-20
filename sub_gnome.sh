@@ -13,6 +13,8 @@ sudo pacman -S --noconfirm \
     gnome-system-monitor \
     loupe \
 	nautilus \
+    sane-airscan \
+    simple-scan \
 	xdg-user-dirs \
     xorg-server
 
