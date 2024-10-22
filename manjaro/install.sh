@@ -23,11 +23,12 @@ rm -rm tmp/yay-git
 $YAY_INSTALL evdi displaylink
 
 # Power management
-$PACMAN_INSTALL tlp thermald
+$PACMAN_INSTALL tlp thermald libsmbios
 sudo systemctl start tlp
 sudo systemctl enable tlp
 sudo systemctl start thermald
 sudo systemctl enable thermald
+sudo smbios-thermal-ctl --set-thermal-mode=Balanced
 
 # Set kernel parameters to enable suspend
 sudo sed -i '6s/"$/ acpi_rev_override=1 acpi_osi=Linux mem_sleep_default=deep"/' /etc/default/grub
