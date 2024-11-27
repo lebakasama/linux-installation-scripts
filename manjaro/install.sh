@@ -33,6 +33,12 @@ sudo smbios-thermal-ctl --set-thermal-mode=Balanced
 # Set kernel parameters to enable suspend
 sudo sed -i '6s/"$/ acpi_rev_override=1 acpi_osi=Linux mem_sleep_default=deep"/' /etc/default/grub
 
+# Extra software
+$YAY_INSTALL
+    visual-studio-code-bin \
+    input-remapper \
+    rustup
+
 # Regenerate grub settings
 sudo grub-mkconfig -o /boot/grub/grub.cfg
 
