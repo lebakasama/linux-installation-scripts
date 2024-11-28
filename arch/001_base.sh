@@ -5,28 +5,30 @@ DEFAULT_USER=franck
 DEFAULT_PASSWORD=password    # Used for root and default user
 ENCRYPTED_DEVICE=nvme1n1p3
 ENCRYPTED_MAPPER_DEVICE=cryptroot
+
+function log {
+    printf "\n##### $1\n"
+}
  
-# System time config
-ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
-hwclock --systohc
+log "System time config"
+sudo ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+sudo hwclock --systohc
 
-# Locale config
-sed -i '171s/.//' /etc/locale.gen
-locale-gen
-echo "LANG=en_US.UTF-8" >> /etc/locale.conf
+log "Locale config"
+sudo sed -i '171s/#//' /etc/locale.gen
+sudo locale-gen
+sudo echo "LANG=en_US.UTF-8" > /etc/locale.conf
 
-# Basic network config
-echo "arch" >> /etc/hostname
-echo "127.0.0.1 localhost"  >> /etc/hosts
-echo "::1       localhost"  >> /etc/hosts
-echo "127.0.1.1 arch.localdomain.arch" >> /etc/hosts
+log "Basic network config"
+sudo echo "arch" > /etc/hostname
+sudo cp config_files/hosts /etc/hosts
 
-# Set default root password and create user
-echo root:$DEFAULT_PASSWORD | chpasswd
-useradd -m -U -G wheel -p $DEFAULT_PASSWORD $DEFAULT_USER
+#log "Set default root password and create user"
+#sudo echo root:$DEFAULT_PASSWORD | chpasswd
+#sudo useradd -m -U -G wheel -p $DEFAULT_PASSWORD $DEFAULT_USER
 
-# Install required packages for the commands below
-pacman -S --noconfirm \
+log "Install required packages for the commands below"
+sudo pacman -S --noconfirm \
 	base-devel \
 	efibootmgr \
 	cryptsetup \
@@ -43,36 +45,42 @@ pacman -S --noconfirm \
 	vi \
 	sudo
 
-# Install yay
+log "Install yay"
 bash ./sub_yay.sh
 
-# Install grub
-grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
-grub-mkconfig -o /boot/grub/grub.cfg
+log "Install grub"
+sudo grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
+sudo grub-mkconfig -o /boot/grub/grub.cfg
 
-# Configure grub
-UUID="$(blkid -o value /dev/$ENCRYPTED_DEVICE | head -n 1)"
-sed -i "6s/\\\"$/ cryptdevice\=UUID\=$UUID:$ENCRYPTED_MAPPER_DEVICE root\=\/dev\/mapper\/$ENCRYPTED_MAPPER_DEVICE\"/" /etc/default/grub
+log "Configure grub"
+UUID="$(sudo blkid -o value /dev/$ENCRYPTED_DEVICE | head -n 1)"
+LINENUM=6
+TO_INSERT=" cryptdevice\\=UUID\\=$UUID:$ENCRYPTED_MAPPER_DEVICE root\\=\\/dev\\/mapper\\/$ENCRYPTED_MAPPER_DEVICE\\\""
+sed "${LINENUM}q;d" /etc/default/grub | grep -qF "$UUID" || sudo sed -i "${LINENUM}s/\\\"$/$TO_INSERT/" /etc/default/grub
 
-# Set kernel parameters to enable suspend
-sed -i '6s/"$/ acpi_rev_override=1 acpi_osi=Linux mem_sleep_default=deep"/' /etc/default/grub
+log "Set kernel parameters to enable suspend"
+TO_INSERT=" acpi_rev_override=1 acpi_osi=Linux mem_sleep_default=deep"
+LINENUM=6
+sed "${LINENUM}q;d" /etc/default/grub | grep -qF "$TO_INSERT" || sudo sed -i "${LINENUM}s/\\\"$/$TO_INSERT\\\"/" /etc/default/grub
 
-# Regenerate grub settings
-grub-mkconfig -o /boot/grub/grub.cfg
+log "Regenerate grub settings"
+sudo grub-mkconfig -o /boot/grub/grub.cfg
 
-# mkinitcpio config and regeneration
-sed -i '7s/()/(btrfs)/' /etc/mkinitcpio.conf
-sed -i '55s/block filesystem/block encrypt filesystem/' /etc/mkinitcpio.conf
-mkinitcpio -p linux
+log "mkinitcpio config and regeneration"
+TO_INSERT=" btrfs"
+LINENUM=7
+sed "${LINENUM}q;d" /etc/mkinitcpio.conf | grep -qF "$TO_INSERT" || sudo sed -i "${LINENUM}s/)/$TO_INSERT)/" /etc/mkinitcpio.conf
+sudo sed -i '55s/block filesystem/block encrypt filesystem/' /etc/mkinitcpio.conf
+sudo mkinitcpio -p linux
 
-# Start TLP (power saving)
-systemctl enable tlp
-systemctl start tlp
+log "Start TLP (power saving)"
+sudo systemctl enable tlp
+sudo systemctl start tlp
 
-# Set thermal mode. smbios-thermal-ctl works only as root or sudo.
+log "Set thermal mode. smbios-thermal-ctl works only as root or sudo."
 # Get current mode: smbios-thermal-ctl -g  
 # Get available modes: smbios-thermal-ctl -i
-smbios-thermal-ctl --set-thermal-mode=Balanced
+sudo smbios-thermal-ctl --set-thermal-mode=Balanced
 
 echo
 echo "GRUB should be installed. Reboot and hope for the best"
