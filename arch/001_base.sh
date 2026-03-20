@@ -27,7 +27,9 @@ read -p "Device where to install arch: " TARGET_DEVICE
 read -p "This script will destroy all data on $TARGET_DEVICE. Enter YES to confirm: " CONFIRM
 [ "$CONFIRM" != "YES" ] && abort
 
-echo Continuing...
+echo Creating and formatting UEFI parition
+sgdisk -n 1:0:+1G -t 1:ef00 /dev/$TARGET_DEVICE
+mkfs.fat -F32 /dev/$TARGET_DEVICE
 exit 0
  
 # System time config
