@@ -5,6 +5,22 @@ DEFAULT_USER=franck
 DEFAULT_PASSWORD=password    # Used for root and default user
 ENCRYPTED_DEVICE=nvme1n1p3
 ENCRYPTED_MAPPER_DEVICE=cryptroot
+
+abort() {
+    echo "Aborted"
+    exit 1
+}
+
+sudo lsblk
+
+echo
+read -p "Device where to install arch: " TARGET_DEVICE
+
+read -p "This script will destroy all data on $TARGET_DEVICE. Enter YES to confirm: " CONFIRM
+[ "$CONFIRM" != "YES" ] && abort
+
+echo Continuing...
+exit 0
  
 # System time config
 ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
