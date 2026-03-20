@@ -29,7 +29,7 @@ read -p "This script will destroy all data on $TARGET_DEVICE. Enter YES to confi
 
 echo Creating and formatting UEFI parition
 sgdisk -n 1:0:+1G -t 1:ef00 /dev/$TARGET_DEVICE
-mkfs.fat -F32 /dev/$TARGET_DEVICE
+mkfs.fat -F32 /dev/"$TARGET_DEVICE"1
 exit 0
  
 # System time config
