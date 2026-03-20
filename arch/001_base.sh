@@ -1,15 +1,23 @@
 #!/bin/bash
+set -e
 
 # MAKE SURE THAT THIS IS CORRECT BEFORE RUNNING !!
 DEFAULT_USER=franck
 DEFAULT_PASSWORD=password    # Used for root and default user
 ENCRYPTED_DEVICE=nvme1n1p3
 ENCRYPTED_MAPPER_DEVICE=cryptroot
+TARGET_DEVICE=no_device
 
 abort() {
     echo "Aborted"
     exit 1
 }
+
+error_handler() {
+    echo "Error occured at line $1"
+    abort
+}
+trap 'error_handler $LINENO' ERR
 
 sudo lsblk
 
