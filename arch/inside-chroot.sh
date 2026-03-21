@@ -1,69 +1,20 @@
 #!/bin/bash
 set -e
 
-# MAKE SURE THAT THIS IS CORRECT BEFORE RUNNING !!
-DEFAULT_USER=franck
-DEFAULT_PASSWORD=password    # Used for root and default user
-ENCRYPTED_DEVICE=nvme1n1p3
-ENCRYPTED_MAPPER_DEVICE=cryptroot
-TARGET_DEVICE=no_device
-PART_UEFI=1
-PART_LUKS=2
-
 abort() {
-    echo "Aborted"
+    echo "Aborted inside-chroot.sh"
     exit 1
 }
 
 error_handler() {
-    echo "Error occured at line $1"
+    echo "Error occured in inside-chroot, line $1"
     abort
 }
 trap 'error_handler $LINENO' ERR
 
-sudo lsblk
-
-echo
-read -p "Device where to install arch: " TARGET_DEVICE
-
-# read -p "This script will destroy all data on $TARGET_DEVICE. Enter YES to confirm: " CONFIRM
-# [ "$CONFIRM" != "YES" ] && abort
-
-# echo Deleting all existing partitions on /dev/"$TARGET_DEVICE"
-# sgdisk -Z /dev/"$TARGET_DEVICE"
-
-# echo Creating and formatting UEFI parition
-# sgdisk -n "$PART_UEFI":0:+1G -t "$PART_UEFI":ef00 /dev/"$TARGET_DEVICE"
-# mkfs.fat -F32 /dev/"$TARGET_DEVICE$PART_UEFI"
-
-# echo Creating encrypted LUKS partition
-# read -s -p "Enter encryption passphrase for /dev/$TARGET_DEVICE$PART_LUKS: " LUKS_PASSPHRASE
-# echo
-# read -s -p "Enter encryption passphrase again: " LUKS_PASSPHRASE_CONFIRM
-# echo
-# [ "$LUKS_PASSPHRASE" != "$LUKS_PASSPHRASE_CONFIRM" ] && abort
-# unset LUKS_PASSPHRASE_CONFIRM
-
-# sgdisk -n "$PART_LUKS":0:0 -t "$PART_LUKS":8300 /dev/"$TARGET_DEVICE"
-# echo "$LUKS_PASSPHRASE" | cryptsetup --batch-mode -q luksFormat /dev/"$TARGET_DEVICE$PART_LUKS"
-
-# echo Format encrypted partition to ext4
-# echo "$LUKS_PASSPHRASE" | cryptsetup open /dev/"$TARGET_DEVICE$PART_LUKS" cryptroot
-# unset LUKS_PASSPHRASE
-# mkfs.ext4 /dev/mapper/cryptroot
-
-mount  /dev/mapper/cryptroot /mnt
-mkdir -f /mnt/boot
-mount /dev/$TARGET_DEVICE$PART_UEFI /mnt/boot
-
-echo Installing kernel
-pacstrap /mnt base linux linux-firmware
-
-echo Generate fstab
-genfstab -U /mnt >> /mnt/etc/fstab
-
-echo chrooting to new system
-arch-chroot /mnt ./inside_chroot.sh
+# System time config
+ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
+hwclock --systohc
 
 exit 0
 
