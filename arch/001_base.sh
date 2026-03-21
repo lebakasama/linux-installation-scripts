@@ -37,8 +37,10 @@ sgdisk -n "$PART_UEFI":0:+1G -t "$PART_UEFI":ef00 /dev/"$TARGET_DEVICE"
 mkfs.fat -F32 /dev/"$TARGET_DEVICE$PART_UEFI"
 
 echo Creating encrypted LUKS partition
-read -p -s "Enter encryption passphrase for /dev/$TARGET_DEVICE$PART_LUKS: " LUKS_PASSPHRASE
-read -p -s "Enter encryption passphrase again: " LUKS_PASSPHRASE_CONFIRM
+read -s -p "Enter encryption passphrase for /dev/$TARGET_DEVICE$PART_LUKS: " LUKS_PASSPHRASE
+echo
+read -s -p "Enter encryption passphrase again: " LUKS_PASSPHRASE_CONFIRM
+echo
 [ "$LUKS_PASSPHRASE" != "$LUKS_PASSPHRASE_CONFIRM" ] && abort
 unset LUKS_PASSPHRASE_CONFIRM
 
@@ -49,6 +51,10 @@ echo Format encrypted partition to ext4
 echo "$LUKS_PASSPHRASE" | cryptsetup open /dev/"$TARGET_DEVICE$PART_LUKS" cryptroot
 unset LUKS_PASSPHRASE
 mkfs.ext4 /dev/mapper/cryptroot
+
+mount /dev/mapper/cryptroot /mnt
+mkdir /mnt/boot
+mount /dev/$TARGET_DEVICE$PART_UEFI /mnt/boot
 
 exit 0
  
