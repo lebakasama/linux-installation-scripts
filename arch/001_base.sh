@@ -56,6 +56,15 @@ mount /dev/mapper/cryptroot /mnt
 mkdir /mnt/boot
 mount /dev/$TARGET_DEVICE$PART_UEFI /mnt/boot
 
+echo Installing kernel
+pacstrap /mnt base linux linux-firmware
+
+echo Generate fstab
+genfstab -U /mnt >> /mnt/etc/fstab
+
+echo chrooting to new system
+arch-chroot /mnt
+
 exit 0
  
 # System time config
@@ -63,7 +72,8 @@ ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 hwclock --systohc
 
 # Locale config
-sed -i '171s/.//' /etc/locale.gen
+LINE_NUM=`grep -n "en_US.UTF-8" /etc/locale.gen | cut -d: -f1`
+sed -i '"$LINE_NUM"s/.//' /etc/locale.gen
 locale-gen
 echo "LANG=en_US.UTF-8" >> /etc/locale.conf
 
