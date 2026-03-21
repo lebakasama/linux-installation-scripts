@@ -53,7 +53,7 @@ read -p "Device where to install arch: " TARGET_DEVICE
 # mkfs.ext4 /dev/mapper/cryptroot
 
 mount  /dev/mapper/cryptroot /mnt
-mkdir -f /mnt/boot
+mkdir /mnt/boot
 mount /dev/$TARGET_DEVICE$PART_UEFI /mnt/boot
 
 echo Installing kernel
@@ -63,7 +63,9 @@ echo Generate fstab
 genfstab -U /mnt >> /mnt/etc/fstab
 
 echo chrooting to new system
-arch-chroot /mnt ./inside_chroot.sh
+cp inside-chroot.sh /mnt
+arch-chroot /mnt /inside-chroot.sh
+rm /mnt/inside-chroot.sh
 
 exit 0
 
