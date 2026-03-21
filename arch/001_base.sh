@@ -65,11 +65,11 @@ genfstab -U /mnt >> /mnt/etc/fstab
 echo chrooting to new system
 arch-chroot /mnt
 
-exit 0
- 
 # System time config
 ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 hwclock --systohc
+
+exit 0
 
 # Locale config
 LINE_NUM=`grep -n "en_US.UTF-8" /etc/locale.gen | cut -d: -f1`
