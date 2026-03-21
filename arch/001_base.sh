@@ -53,7 +53,7 @@ read -p "Device where to install arch: " TARGET_DEVICE
 # mkfs.ext4 /dev/mapper/cryptroot
 
 mount  /dev/mapper/cryptroot /mnt
-mkdir /mnt/boot
+mkdir -p /mnt/boot
 mount /dev/$TARGET_DEVICE$PART_UEFI /mnt/boot
 
 echo Installing kernel
