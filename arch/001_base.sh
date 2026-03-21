@@ -36,9 +36,13 @@ echo Creating and formatting UEFI parition
 sgdisk -n "$PART_UEFI":0:+1G -t "$PART_UEFI":ef00 /dev/"$TARGET_DEVICE"
 mkfs.fat -F32 /dev/"$TARGET_DEVICE$PART_UEFI"
 
-echo Creating encrypted partition in ext4 format
+echo Creating encrypted LUKS partition
 sgdisk -n "$PART_LUKS":0:0 -t "$PART_LUKS":8300 /dev/"$TARGET_DEVICE"
-sudo cryptsetup luksFormat /dev/"$TARGET_DEVICE$PART_LUKS"
+cryptsetup --batch-mode -q luksFormat /dev/"$TARGET_DEVICE$PART_LUKS"
+
+echo Format encrypted partition to ext4
+cryptsetup open /dev/"$TARGET_DEVICE$PART_LUKS" cryptroot
+mkfs.ext4 /dev/mapper/cryptroot
 
 exit 0
  
