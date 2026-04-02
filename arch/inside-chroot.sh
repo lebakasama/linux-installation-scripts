@@ -12,23 +12,36 @@ error_handler() {
 }
 trap 'error_handler $LINENO' ERR
 
+get_password() {
+    USER_MSG=$1
+    while :
+    do
+        read -s -p "$USER_MSG" PASSWD1
+        echo
+        read -s -p "Enter password again: " PASSWD2
+        echo
+        [ "$PASSWD1" == "$PASSWD2" ] && return $PASSWD1
+        echo "Passwords don't match. Try again."
+        echo
+    done
+}
+
 # System time config
 ln -sf /usr/share/zoneinfo/Asia/Tokyo /etc/localtime
 hwclock --systohc
 
-exit 0
-
 # Locale config
 LINE_NUM=`grep -n "en_US.UTF-8" /etc/locale.gen | cut -d: -f1`
-sed -i '"$LINE_NUM"s/.//' /etc/locale.gen
+sed -i "$LINE_NUM"'s/.//' /etc/locale.gen
 locale-gen
 echo "LANG=en_US.UTF-8" >> /etc/locale.conf
 
 # Basic network config
-echo "arch" >> /etc/hostname
+read -p "Hostname: " HOSTNAME
+echo "$HOSTNAME" >> /etc/hostname
 echo "127.0.0.1 localhost"  >> /etc/hosts
 echo "::1       localhost"  >> /etc/hosts
-echo "127.0.1.1 arch.localdomain.arch" >> /etc/hosts
+echo "127.0.1.1 "$HOSTNAME".localdomain.arch" >> /etc/hosts
 
 # Set default root password and create user
 echo root:$DEFAULT_PASSWORD | chpasswd
@@ -54,6 +67,10 @@ pacman -S --noconfirm \
 
 # Install yay
 bash ./sub_yay.sh
+
+echo $(get_password "Enter user password: ")
+
+exit 0
 
 # Install grub
 grub-install --target=x86_64-efi --efi-directory=/boot --bootloader-id=GRUB
